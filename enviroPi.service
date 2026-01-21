@@ -1,0 +1,14 @@
+[Unit]
+Description=enviroPi environmental monitoring
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/enviroPi
+ExecStart=/bin/bash -c '/opt/enviroPi/update.sh && /opt/enviroPi_env/bin/python /opt/enviroPi/main.py'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

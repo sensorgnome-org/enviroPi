@@ -1,0 +1,46 @@
+# SkyPi
+## Particulate and light level monitoring with the Raspberry Pi
+
+## Details
+A total of three sensors on two hardware components are used to measure:
+- Particulates (pm1.0, pm2.5,pm10) - PMS5003
+- Humidity, temperature, air pressure - BME280
+- Light levels - SQM-LU
+
+Air sensors are all attached to a custom-built "bonnet" for the Raspberry Pi purpose-built for Motus, using the pin headers for connection plus a daughter board for with 
+
+Light level sensor is a USB device made by UniHedron used to detect light pollution.
+
+## Installation
+With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/main/install.sh | sudo bash`
+
+
+## Requirements
+
+### Python virtual environment
+Latest RPi OS locks down the Python environment, preventing you from installing packages into the system interpreter using Pip. For this reason, you need to use a virtual environment.
+- Run this code:
+    ```
+    sudo apt install python3-venv
+    python3 -m venv env
+    source env/bin/activate
+    ```
+- Install required packages from `requirements.txt`
+    ```
+    pip install -r requirements.txt
+    ```
+
+### PMS5003
+Uses UART interface which is disabled by default. Steps to make it work:
+- Edit `/boot/firmware/config.txt` and add line `enable_uart=1`
+- Enter `raspi-config` and select `Interface Options --> Serial Port` and answer the questions:
+  - Login shell over serial --> NO
+  - Enable serial hardware --> YES
+- Reboot
+
+### BME280
+- Enter `raspi-config` and select `Interface Options --> I2C --> Enable`
+- Reboot
+
+### SQM-LU
+- 

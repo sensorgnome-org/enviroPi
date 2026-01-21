@@ -1,0 +1,4 @@
+pyserial
+adafruit-blinka
+adafruit-circuitpython-bmp280
+RPi.GPIO
