@@ -8,9 +8,11 @@ User=ampi
 Group=ampi
 WorkingDirectory=/opt/enpi
 #ExecStart=/bin/bash -c '/opt/enpi/update.sh && /opt/enpi/env/bin/python /opt/enpi/enpi-light.py'
-ExecStart=/opt/enpi/env/bin/python /opt/enpi/enpi-light.py --port=/dev/%i -v
+ExecStart=/opt/enpi/env/bin/python /opt/enpi/enpi-light.py --port=/dev/%i
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

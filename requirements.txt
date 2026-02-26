@@ -3,3 +3,5 @@ adafruit-blinka
 adafruit-circuitpython-bmp280
 adafruit-circuitpython-bme280
 RPi.GPIO
+boto3
+botocore

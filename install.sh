@@ -1,64 +1,76 @@
 #!/usr/bin/env bash
 set -e
 
-REPO_URL="https://github.com/sensorgnome-org/enviroPi.git"
-APP_DIR="/opt/enviroPi"
-VENV_DIR="/opt/enviroPi_env"
-SERVICE_NAME="enviroPi.service"
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
+ENPI_DIR="/opt/enpi"
+LOG_DIR="/var/log/enpi"
+DATA_DIR="/data/enpi"
+SERVICE_USER="ampi"
 
-echo "=== enviroPi installer starting ==="
+echo "=== enviroPi Installer ==="
 
-# Ensure basic tools
-sudo apt-get update
-sudo apt-get install -y git python3 python3-venv python3-pip i2c-tools
-# Enable I2C and UART in /boot/config.txt
-BOOT_CONFIG="/boot/config.txt"
+# 1. Ensure required packages
+echo "[1/8] Installing system dependencies..."
+sudo apt update
+sudo apt install -y python3-full python3-venv git i2c-tools
 
-if ! grep -q "^dtparam=i2c_arm=on" "$BOOT_CONFIG"; then
-  echo "dtparam=i2c_arm=on" | sudo tee -a "$BOOT_CONFIG"
+# 2. Create service user if missing
+echo "[2/8] Ensuring user '$SERVICE_USER' exists..."
+if ! id "$SERVICE_USER" >/dev/null 2>&1; then
+    sudo useradd -m -s /bin/bash "$SERVICE_USER"
 fi
 
-if ! grep -q "^enable_uart=1" "$BOOT_CONFIG"; then
-  echo "enable_uart=1" | sudo tee -a "$BOOT_CONFIG"
-fi
+# Add required groups
+sudo usermod -aG gpio,i2c,dialout "$SERVICE_USER"
 
-# Disable serial console (free UART)
-sudo systemctl disable serial-getty@ttyAMA0.service 2>/dev/null || true
-sudo systemctl disable serial-getty@ttyS0.service 2>/dev/null || true
+# 3. Install code into /opt/enpi
+echo "[3/8] Installing code into $ENPI_DIR..."
+sudo mkdir -p "$ENPI_DIR"
+sudo rsync -av --delete ./ "$ENPI_DIR"/
+sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$ENPI_DIR"
 
-# Load I2C modules
-echo "i2c-dev" | sudo tee -a /etc/modules >/dev/null || true
+# 4. Create data + log directories
+echo "[4/8] Creating data and log directories..."
+sudo mkdir -p "$DATA_DIR"
+sudo mkdir -p "$LOG_DIR"
+sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$DATA_DIR"
+sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$LOG_DIR"
 
-# Clone or update repo
-if [ -d "$APP_DIR/.git" ]; then
-  echo "Updating existing enviroPi repo..."
-  sudo git -C "$APP_DIR" pull --ff-only
-else
-  echo "Cloning enviroPi repo..."
-  sudo git clone "$REPO_URL" "$APP_DIR"
-  sudo chmod +x /opt/enviroPi/update.sh
-fi
-
-sudo chown -R pi:pi "$APP_DIR" || true
-
-# Create virtual environment
-if [ ! -d "$VENV_DIR" ]; then
-  python3 -m venv "$VENV_DIR"
-fi
-
-# Install Python dependencies
-source "$VENV_DIR/bin/activate"
+# 5. Python virtual environment
+echo "[5/8] Setting up Python virtual environment..."
+sudo -u "$SERVICE_USER" bash <<EOF
+cd "$ENPI_DIR"
+python3 -m venv env
+source env/bin/activate
 pip install --upgrade pip
-pip install -r "$APP_DIR/requirements.txt"
-deactivate
+if [ -f requirements.txt ]; then
+    pip install -r requirements.txt
+fi
+EOF
 
-# Install systemd service
-sudo cp "$APP_DIR/systemd/enviroPi.service" "$SERVICE_FILE"
+# 6. Install systemd services
+echo "[6/8] Installing systemd services..."
+sudo cp "$ENPI_DIR/systemd/enpi-air.service" /etc/systemd/system/
+sudo cp "$ENPI_DIR/systemd/enpi-light@.service" /etc/systemd/system/
+
 sudo systemctl daemon-reload
-sudo systemctl enable "$SERVICE_NAME"
-sudo systemctl restart "$SERVICE_NAME"
+sudo systemctl enable enpi-air.service
+sudo systemctl enable enpi-light@default.service
 
-echo "=== enviroPi installation complete ==="
-echo "Rebooting to apply UART/I2C changes..."
-sudo reboot
+# 7. Start services
+echo "[7/8] Starting services..."
+sudo systemctl restart enpi-air.service
+
+
+echo "[8/8] Installing udev rules..."
+# Copy rules from repo to system directory
+sudo cp "$ENPI_DIR/udev/99-enpi.rules" /etc/udev/rules.d/
+# Ensure correct permissions
+sudo chmod 644 /etc/udev/rules.d/99-enpi.rules
+# Reload and trigger
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+echo "=== Installation complete ==="
+echo "Logs: $LOG_DIR"
+echo "Data: $DATA_DIR"
+echo "Services: enpi-air, enpi-light@default"

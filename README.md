@@ -60,7 +60,12 @@ sudo mkdir -p /var/log/enpi
 sudo chown ampi:ampi /var/log/enpi
 sudo chmod 755 /var/log/enpi
 ```
-
+- update udev rules
+```
+sudo mv /home/enpi/*.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
 ### PMS5003
 Uses UART interface which is disabled by default. Steps to make it work:
 - Edit `/boot/firmware/config.txt` and add line `enable_uart=1`
@@ -69,9 +74,13 @@ Uses UART interface which is disabled by default. Steps to make it work:
   - Enable serial hardware --> YES
 - Reboot
 
+- Notes: might try to reconfigure uart to use miniuart (ttyS0) so that it's compatible with GPS HAT
+  - /boot/config.txt -> dtoverlay=uart1,txd1_pin=32,rxd1_pin=33
+
 ### BME280
 - Enter `raspi-config` and select `Interface Options --> I2C --> Enable`
 - Reboot
 
 ### SQM-LU
 - 
+

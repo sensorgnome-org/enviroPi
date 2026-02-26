@@ -1,0 +1,10 @@
+# SQM-LU USB-serial device (FTDI)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0660", GROUP="dialout"
+
+# On plug-in: start shiftwrap instance
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ACTION=="add", \
+  RUN+="/opt/enpi/sqm_wrangle add %n $attr{serial}"
+
+# On unplug: stop shiftwrap instance
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ACTION=="remove", \
+  RUN+="/opt/enpi/sqm_wrangle remove %n"

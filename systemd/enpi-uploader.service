@@ -1,0 +1,13 @@
+[Unit]
+Description=data file uploader
+
+[Service]
+User=1000
+Group=1000
+ExecStart=/opt/enpi/env/bin/python /opt/enpi/uploader.py
+Restart=always
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+[Install]
+WantedBy=multi-user.target

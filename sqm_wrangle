@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ACTION="$1"
+DEVNO="$2"
+SERIAL="$3"
+
+INSTANCE="enpi-light@${DEVNO}-${SERIAL}"
+
+case "$ACTION" in
+  add)
+    /usr/bin/systemd-run --no-block /usr/bin/systemctl start shiftwrap@"$INSTANCE"
+    ;;
+  remove)
+    /usr/bin/systemd-run --no-block /usr/bin/systemctl stop shiftwrap@"$INSTANCE"
+    ;;
+esac

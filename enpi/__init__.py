@@ -1,3 +1,4 @@
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __log_dir__ = "/var/log/enpi"
 __data_dir__ = "/data/enpi"
+__sitename_file__ = "/etc/sitename"
