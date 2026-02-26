@@ -1,0 +1,14 @@
+issystemd: true
+shifts:
+  morning:
+    start: nightEnd-1h
+    stop: sunriseEnd+1h
+    setup: setpar recording.duration 300 recording.spacing 300
+  evening:
+    start: sunsetStart-1h
+    stop: night+1h
+    setup: setpar recording.duration 300 recording.spacing 600
+  testing:
+    start: sunrise-1h
+    stop: sunset+1h
+    setup: setpar recording.duration 300 recording.spacing 300

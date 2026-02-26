@@ -15,6 +15,10 @@ Light level sensor is a USB device made by UniHedron used to detect light pollut
 With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/main/install.sh | sudo bash`
 
 
+---
+
+## Manual install
+
 ## Requirements
 
 ### Python virtual environment
@@ -29,6 +33,33 @@ Latest RPi OS locks down the Python environment, preventing you from installing 
     ```
     pip install -r requirements.txt
     ```
+
+### Modifying services
+```
+sudo mv /home/enpi/enpi-*.yml /etc/shiftwrap/services/
+sudo mv /home/enpi/*.rules /etc/udev/rules.d/
+sudo mv /home/enpi/*.py /opt/enpi/
+sudo mv /home/enpi/env/ /opt/enpi/env/
+sudo mv /home/enpi/update.sh /opt/enpi/
+sudo mv /home/enpi/enpi-*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable enpi-air
+sudo systemctl start enpi-air 
+```
+- See if modifications worked by checking the status: `sudo systemctl status enpi-air`
+```
+sudo systemctl daemon-reload
+sudo systemctl restart enpi-air
+sudo systemctl status enpi-air
+
+journalctl -u enpi -n 50 --no-pager
+```
+- Make log folder if it doesn't exist
+```
+sudo mkdir -p /var/log/enpi
+sudo chown ampi:ampi /var/log/enpi
+sudo chmod 755 /var/log/enpi
+```
 
 ### PMS5003
 Uses UART interface which is disabled by default. Steps to make it work:
