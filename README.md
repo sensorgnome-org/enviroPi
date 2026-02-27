@@ -17,6 +17,18 @@ With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sens
 
 ---
 
+## Next steps
+
+- Test miniUART (ttyS0) with PMS5003
+  - Switch to pins 32/33 or something
+  - Test with GPS hat plugged in
+- Switch BMP/BME280 pin from 4 to 27
+- Test with Cell Hat
+- Add reporting to SG web interface
+
+
+---
+
 ## Manual install
 
 ## Requirements

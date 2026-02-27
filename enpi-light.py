@@ -6,6 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import argparse
 import sys
+import gzip
 import read_sqmLU as sqmLU
 from datetime import date
 from enpi import __version__
@@ -28,6 +29,7 @@ PORT_sqmLU = args.port
 # Seconds between samples
 sampleInterval = args.interval # default: 5 Minutes
     
+today = date.today()
 
 def init():
     global ser
@@ -91,16 +93,31 @@ def stop():
     logging.info("[enpi-light] Exiting...")
     sys.exit()
     
+def zip_and_remove(path):
+    with open(path, "rb") as src, gzip.open(path + ".gz", "wb") as dst:
+        dst.writelines(src)
+
+    if args.verbose:
+        print(f"[enpi-air] Zipped file {path}")
+        logging.info(f"[enpi-air] Zipped file {path}")
+
+    os.remove(path)
+    return path + ".gz"
+
+def get_filename(date = date.today()):
+    formatted_date = date.strftime('%Y-%m-%d')
+    return f"{args.dir}/light-level_v{__version__}_{formatted_date}.csv"
 
 def main():
-    global today
     init()
     try:
         while True:
-            today = date.today()
-            formatted_date = today.strftime('%Y-%m-%d')
+            global today
+            if today != date.today():
+                zip_and_remove(get_filename(today))
+                today = date.today()
 
-            filename = f"{args.dir}/light-level_v{__version__}_{formatted_date}.csv"
+            filename = get_filename(today)
                 
             with open(filename, mode="a", newline='') as file:
             

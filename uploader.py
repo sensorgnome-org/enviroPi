@@ -2,6 +2,7 @@
 import os
 import time
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from datetime import date, datetime
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -15,11 +16,19 @@ with open(__sitename_file__, "r") as f:
     SITE_NAME = f.read().strip()
 
 def setup_logging():
-    logging.basicConfig(
-        filename=LOG_FILE,
-        level=logging.INFO,
-        format="%(asctime)s %(message)s"
+    handler = TimedRotatingFileHandler(
+        LOG_FILE,
+        when="midnight",
+        interval=1,
+        backupCount=14,   # keep 14 days of logs
+        utc=False
     )
+    formatter = logging.Formatter("(%(asctime)s) %(message)s")
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
 
 def load_secrets(path):
     secrets = {}
@@ -38,14 +47,14 @@ def load_uploaded_set():
     with open(UPLOADED_LOG) as f:
         return {line.strip() for line in f if line.strip()}
 
-def mark_uploaded(filename):
-    with open(UPLOADED_LOG, "a") as f:
-        f.write(filename + "\n")
+def mark_uploaded(filename, filepath):
+    uploaded_path = os.path.join(DATA_DIR, "uploaded_" + filename)
+    os.rename(filepath, uploaded_path)
 
 def is_completed_daily_csv(filename):
     # Expect format: something_YYYY-MM-DD.csv
     try:
-        date_str = filename.split("_")[-1].replace(".csv", "")
+        date_str = filename.split("_")[-1].replace(".csv.gz", "")
         file_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         return file_date < date.today()
     except Exception:
@@ -64,6 +73,14 @@ def upload_file(s3, bucket, filepath):
     except (BotoCoreError, ClientError) as e:
         logging.error(f"Upload failed for {filename}: {e}")
         return False
+
+def is_upload_candidate(f):
+    return (
+        f.endswith(".csv.gz")
+        and "uploaded" not in f
+        and not f.startswith("_")
+        and is_completed_daily_csv(f)
+    )
 
 def main():
     setup_logging()
@@ -92,23 +109,14 @@ def main():
         aws_secret_access_key=aws_key
     )
 
-    uploaded = load_uploaded_set()
-
     while True:
-        files = sorted(os.listdir(DATA_DIR))
+        files = [f for f in os.listdir(DATA_DIR) if is_upload_candidate(f)]
+
         for f in files:
-            if not f.endswith(".csv"):
-                continue
-            if f.startswith("_"):
-                continue
-            if not is_completed_daily_csv(f):
-                continue
-            if f in uploaded:
-                continue
 
             full_path = os.path.join(DATA_DIR, f)
             if upload_file(s3, bucket, full_path):
-                mark_uploaded(f)
+                mark_uploaded(f, full_path)
                 # Optional: delete after upload
                 # os.remove(full_path)
 
