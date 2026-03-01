@@ -53,7 +53,7 @@ PIN_pms5003 = 17 # Requires 5v
 # Seconds after waking from sleep before a measurement should be taken
 wakeLatency = 3 if args.debug else 60
 # Seconds between samples
-sampleInterval = args.interval # default: 5 Minutes
+sampleInterval = 5 if args.debug else args.interval # default: 5 Minutes
         
 sensors = {
     "bmp280": bmp280,
@@ -124,8 +124,14 @@ def activate_sensors( on ):
 
 def poll_sensors():
     response = {}
+    if args.verbose:
+        print(f"[enpi-air] Polling sensors...")
+        logging.info(f"[enpi-air] Polling sensors...")
     for sensor in sensors:
         response[sensor] = sensors[sensor].poll()
+        if not response[sensor]:
+            print(f"[enpi-air] Sensor {sensor} not detected.")
+            logging.error(f"[enpi-air] Sensor {sensor} not detected.")
     return response
 
 def read():

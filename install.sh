@@ -53,6 +53,7 @@ sudo cp "$ENPI_DIR/systemd/enpi-air.service" /etc/systemd/system/
 sudo cp "$ENPI_DIR/systemd/enpi-light@.service" /etc/systemd/system/
 
 sudo systemctl daemon-reload
+sudo systemctl enable pigpio.service
 sudo systemctl enable enpi-air.service
 sudo systemctl enable enpi-light@default.service
 

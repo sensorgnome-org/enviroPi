@@ -3,12 +3,17 @@ import time
 import struct
 import logging
 import RPi.GPIO as GPIO
+import pigpio
 
+
+RX_pms5003 = 27 # For software UART
 exists = False
 
-def init( PIN_pms5003 = 17, set_verbose = False ):
-    global verbose
-    global ser
+PAYLOAD_SIZE = 28
+HEADER_SIZE = 4
+
+def init( PIN_pms5003 = 17, set_verbose = False):
+    global verbose,pi,exists
     verbose = set_verbose
 
     if verbose:
@@ -22,8 +27,35 @@ def init( PIN_pms5003 = 17, set_verbose = False ):
 
     time.sleep(0.1)
 
+    pi = pigpio.pi()
+    if not pi.connected:
+        if verbose:
+            print("[PMS5003] Error: Could not connect to pigpio daemon")
+            logging.error("[PMS5003] Error: Could not connect to pigpio daemon")
+        return False
+
     # Connect to UART for PMS5003 (default UART on GPIO14/15 is /dev/serial0)
-    ser = serial.Serial('/dev/serial0', baudrate=9600, timeout=5)
+    #ser = serial.Serial(device, baudrate=9600, timeout=5)
+    status = pi.bb_serial_read_open(RX_pms5003, 9600)
+    # Discard data for 300 ms to let PMS5003 align to next frame
+    start = time.time()
+    buf = bytearray()
+    
+    while time.time() - start < 2.0:  # up to 2 seconds
+        count, data = pi.bb_serial_read(RX_pms5003)
+        if count > 0:
+            buf.extend(data)
+
+        if b'\x42\x4d' in buf:
+            exists = True
+            if verbose:
+                print("[PMS5003] Found a header")
+                logging.error("[PMS5003] Found a header")
+            break
+
+        time.sleep(0.01)
+
+
 
 def on(pin):
     GPIO.output(pin, GPIO.LOW)
@@ -32,56 +64,84 @@ def off(pin):
     GPIO.output(pin, GPIO.HIGH)
 
 def stop():
-    ser.close()
+    pi.bb_serial_read_close(RX_pms5003)
+    pi.stop()
 
 def poll():
     global exists
     if not exists:
-        exists = read( True ) is not None
+        if verbose:
+            print(f"[PMS5003] Checking if pms5003 exists...")
+            logging.error(f"[PMS5003] Checking if pms5003 exists...")
+        exists = read( True )
     return exists
 
 def read( poll = False ):
     global exists
-    ser.reset_input_buffer()
-    time.sleep(0.1)
 
     if verbose:
         print("[PMS5003] Reading...")
         logging.info("[PMS5003] Reading...")
-    
-    for _ in range(60):
-        try:
-            if ser.read(1) != b'\x42':
-                continue
-            if ser.read(1) != b'\x4d':
-                continue
-            
-            # Get payload size
-            length_bytes = ser.read(2)
-            length = struct.unpack(">H", length_bytes)[0] # Should be 28
 
-            if verbose:
-                print(f"[PMS5003] Payload length is {length}")
-            payload = ser.read(length)  # 28 bytes total including header
-            
-            if len(payload) != length:
+    start = time.time()
+    buf = bytearray()
+    MAX_TIME = 3.0   # seconds
+
+    while time.time() - start < MAX_TIME:
+        count, data = pi.bb_serial_read(RX_pms5003)
+        if count > 0:
+            buf.extend(data)
+
+        # Look for header
+        while True:
+            idx = buf.find(b'\x42\x4d')
+            if idx < 0:
                 if verbose:
-                    print(f"[PMS5003] Incomplete payload: expected {length} bytes, got {len(payload)}")
-                logging.error(f"[PMS5003] Incomplete payload: expected {length} bytes, got {len(payload)}")
-                continue
+                    print(f"[PMS5003] No header found")
+                    logging.error(f"[PMS5003] No header found")
+                break  # header not found yet
+                            
+            # Get payload size
+            length = struct.unpack(">H", buf[2:4])[0]
 
-            exists = True
-            checksum = ser.read(2)
-            calc = ( sum(length_bytes) + sum(payload[:length]) + 0x42 + 0x4D ) & 0xFFFF
+            if length != PAYLOAD_SIZE:
+                if verbose:
+                    print(f"[PMS5003] Payload wrong length: expected {PAYLOAD_SIZE} bytes, got {len(buf)}")
+                logging.error(f"[PMS5003] Payload wrong length: expected {PAYLOAD_SIZE} bytes, got {len(buf)}")
+                break
+            elif verbose:
+                print(f"[PMS5003] Payload length is {length}")
+            
+            frame_len = HEADER_SIZE + length  # header + length + (payload + checksum)
 
-            recv = struct.unpack(">H", checksum)[0]
 
-            # if calc != recv:
-            #     print("Checksum mismatch")
-            #     logging.error("Checksum mismatch")
-            #     continue
+            frame = buf[idx:idx+frame_len]
+            # Remove frame from buffer
+            del buf[:idx+frame_len]
 
-            data = struct.unpack('>HHHHHHHHHHHHHH', payload[:length])
+            # Parse payload
+            payload = frame[HEADER_SIZE:HEADER_SIZE+length]
+
+            if poll:
+                return True
+            else:
+                exists = True
+
+            checksum_recv = struct.unpack(">H", frame[frame_len-2:frame_len])[0]
+
+            # Compute checksum
+            checksum_calc = (sum(frame[0:frame_len-2])) & 0xFFFF
+
+
+            if checksum_calc != checksum_recv:
+                # Bad frame, skip
+                if verbose:
+                    print(f"[PMS5003] Checksum failed")
+                    print("BAD FRAME:", frame.hex())
+                    print("checksum_recv:", checksum_recv)
+                logging.error(f"[PMS5003] Checksum failed")
+                #del buf[:idx+2]  # remove only the 0x42 0x4D
+                #continue
 
             # Ignored (Factory only)
             pm1_control = data[0] # (CF=1)
@@ -104,9 +164,13 @@ def read( poll = False ):
                 print(f"[PMS5003] PM1.0: {pm1} µg/m³, PM2.5: {pm2_5} µg/m³, PM10: {pm10} µg/m³, PC0.3: {pc0_3}, PC0.5: {pc0_5}, PC1: {pc1}, PC2.5: {pc2_5}, PC5: {pc5}, PC10: {pc10}")
 
             return pm1, pm2_5, pm10, pc0_3, pc0_5, pc1, pc2_5, pc5, pc10
-        except serial.SerialException as e:
-            if verbose:
-                print(f"[PMS5003] Serial error: {e}")
-                logging.error(f"[PMS5003] Serial error: {e}")
-            return None if poll else "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
-    return None if poll else "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA"
+
+        if verbose:
+            print(f"[PMS5003] Serial error")
+            logging.error(f"[PMS5003] Serial error")
+        return False if poll else ("NA",)*9
+            
+    if verbose:
+        print(f"[PMS5003] No response.")
+        logging.error(f"[PMS5003] No response.")
+    return False if poll else ("NA",)*9
