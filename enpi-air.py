@@ -10,6 +10,8 @@ Options:
 Description:
     This script reads data from a BMP280 temperature and pressure sensor and a PMS5003 particulate matter sensor.
 
+
+Rows: "ts","temp","pressure","humidity","pm1","pm2.5","pm10", "pc0.3", "pc0.5", "pc1", "pc2.5", "pc5", "pc10"
 """
 
 
@@ -25,6 +27,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import argparse
 import sys
+import json
 import gzip
 import read_bmp280 as bmp280
 import read_bme280 as bme280
@@ -69,8 +72,8 @@ def init():
 
     # Make sure data dir exists
     os.makedirs(__data_dir__, exist_ok=True)
-
-    print("[enpi-air] Starting enpi-air version " + __version__)
+    if args.verbose:
+        print("[enpi-air] Starting enpi-air version " + __version__)
     logging.info("[enpi-air] Starting enpi-air version " + __version__)
 
     if args.debug:
@@ -130,9 +133,26 @@ def poll_sensors():
     for sensor in sensors:
         response[sensor] = sensors[sensor].poll()
         if not response[sensor]:
-            print(f"[enpi-air] Sensor {sensor} not detected.")
-            logging.error(f"[enpi-air] Sensor {sensor} not detected.")
+            logging.error(f"[enpi-air] Sensor {sensor} not detected.")            
+
+    print(json.dumps(["status", get_status(response)]), flush=True)
+
     return response
+
+def get_status(response):
+    pms = response.get("pms5003", False)
+    bme = response.get("bme280", False)
+    bmp = response.get("bmp280", False)
+
+    if not pms and not bme and not bmp:
+        return "no-dev"
+    if not pms:
+        return "no-dev-pms5003"
+    if not bme and not bmp:
+        return "no-dev-bme-bmp"
+    if bme:
+        return "connected-bme280"
+    return "connected-bmp280"
 
 def read():
 
@@ -221,6 +241,7 @@ def main():
                     print("[enpi-air] Writing to CSV")
                     logging.info("[enpi-air] Writing to CSV")
 
+                print(json.dumps([ts] + list(sensor_data)), flush=True)
                 writer.writerow([ts] + list(sensor_data))
                 
                 if args.verbose:

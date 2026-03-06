@@ -1,4 +1,8 @@
-import serial
+
+"""
+"ts","light_level","frequency","count","duration","temperature"
+"""
+
 import time
 import csv
 import logging
@@ -7,6 +11,7 @@ import os
 import argparse
 import sys
 import gzip
+import json
 import read_sqmLU as sqmLU
 from datetime import date
 from enpi import __version__
@@ -37,11 +42,10 @@ def init():
     setup_logging()
     # Make sure data dir exists
     os.makedirs(__data_dir__, exist_ok=True)
-
-    print("[enpi-light] Starting enpi-light version " + __version__)
+    
+    if args.verbose:
+        print("[enpi-light] Starting enpi-light version " + __version__)
     logging.info("[enpi-light] Starting enpi-light version " + __version__)
-
-    ser = serial.Serial('/dev/serial0', baudrate=9600, timeout=5)
     
     if args.debug:
         print("[enpi-light] ### Running in debug mode")
@@ -57,10 +61,12 @@ def init():
         logging.info("[enpi-light] Start logging.")
 
     try: 
-        sqmLU.init( args.debug )
+        sqmLU.init( args.verbose )
 
     except Exception as e:
-        print(f"[enpi-light] Something went wrong: {e}")
+        if args.verbose:
+            print(f"[enpi-light] Something went wrong: {e}")
+        print(json.dumps(["status", "error"]), flush=True)
         logging.info(f"[enpi-light] Something went wrong: {e}")
 
 
@@ -79,11 +85,14 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
 
+
 def read():
     # Read SQM-LU data
     sensor_data = sqmLU.read( PORT_sqmLU )
     if sensor_data is None:
-        print("[enpi-light] Error reading data from SQM-LU")
+        if args.verbose:
+            print("[enpi-light] Error reading data from SQM-LU")
+        print(json.dumps(["status", "error"]), flush=True)
         logging.info("[enpi-light] Error reading data from SQM-LU")
         sensor_data = "NA","NA","NA","NA","NA"
 
@@ -91,6 +100,7 @@ def read():
 
 def stop():
     logging.info("[enpi-light] Exiting...")
+    sqmLU.stop()
     sys.exit()
     
 def zip_and_remove(path):
@@ -137,6 +147,7 @@ def main():
                 if args.verbose:
                     print("[enpi-light] Writing to CSV")
                     logging.info("[enpi-light] Writing to CSV")
+                print(json.dumps([ts] + list(sensor_data)), flush=True)
                 writer.writerow([ts] + list(sensor_data))
                 
                 if args.once:
