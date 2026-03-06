@@ -40,8 +40,6 @@ def init():
 
     print("[enpi-light] Starting enpi-light version " + __version__)
     logging.info("[enpi-light] Starting enpi-light version " + __version__)
-
-    ser = serial.Serial('/dev/serial0', baudrate=9600, timeout=5)
     
     if args.debug:
         print("[enpi-light] ### Running in debug mode")

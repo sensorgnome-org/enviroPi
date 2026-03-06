@@ -17,8 +17,9 @@ def read(port=SERIAL_PORT):
         print("[SQM-LU] Reading...")
         logging.info("[SQM-LU] Reading...")
     try:
-        with serial.Serial(port, BAUD_RATE, timeout=2) as ser:
+        with serial.Serial(port, BAUD_RATE, timeout=5) as ser:
             # Send the read command
+            ser.reset_input_buffer()
             ser.write(b'Rx\r')
             ser.flush()
             # Read the response
@@ -44,6 +45,8 @@ def parse(data):
             temperature = float(parts[5].rstrip('C'))            # 22.8
             return light_level,frequency,count,duration,temperature
         else:
+            if verbose: 
+                print(f"[SQM-LU] Failed to parse: len(parts)={len(parts)}, parts[0]={parts[0]}")
             return None
     except ValueError:
         if verbose:
