@@ -96,3 +96,6 @@ Uses UART interface which is disabled by default. Steps to make it work:
 ### SQM-LU
 - 
 
+---
+## TESTING
+sudo env $(grep -v '^\s*#' /opt/sensorgnome/enpi/secrets.env | grep -v '^\s*$' | xargs) /opt/sensorgnome/enpi/env/bin/python3 /opt/sensorgnome/enpi/uploader.py

@@ -1,13 +1,11 @@
+# /etc/systemd/system/enpi-uploader.service
 [Unit]
-Description=data file uploader
+Description=enpi S3 uploader
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-User=1000
-Group=1000
-ExecStart=/opt/enpi/env/bin/python /opt/enpi/uploader.py
-Restart=always
-RestartSec=60
-StandardOutput=journal
-StandardError=journal
-[Install]
-WantedBy=multi-user.target
+Type=oneshot
+ExecStart=/opt/sensorgnome/enpi/env/bin/python3 /opt/sensorgnome/enpi/uploader.py
+EnvironmentFile=/opt/sensorgnome/enpi/secrets.env
+User=root

@@ -1,0 +1,10 @@
+# /etc/systemd/system/enpi-uploader.timer
+[Unit]
+Description=Upload enpi data to S3
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+
+[Install]
+WantedBy=timers.target

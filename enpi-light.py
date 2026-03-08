@@ -61,7 +61,7 @@ def init():
         logging.info("[enpi-light] Start logging.")
 
     try: 
-        sqmLU.init( args.verbose )
+        sqmLU.init( args.verbose, PORT_sqmLU )
 
     except Exception as e:
         if args.verbose:
@@ -88,7 +88,7 @@ def setup_logging():
 
 def read():
     # Read SQM-LU data
-    sensor_data = sqmLU.read( PORT_sqmLU )
+    sensor_data = sqmLU.read( )
     if sensor_data is None:
         if args.verbose:
             print("[enpi-light] Error reading data from SQM-LU")

@@ -48,7 +48,9 @@ fi
 EOF
 
 # 6. Pigpio service
-echo "[6/7] Setting up pigpio service..."
+echo "[6/7] Setting up services..."
+sudo mv "$ENPI_DIR/systemd/*" /etc/systemd/system
+
 sudo tee /etc/systemd/system/pigpiod.service > /dev/null <<EOF
 [Unit]
 Description=Pigpio Daemon
@@ -64,7 +66,9 @@ WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
+sudo systemctl enable enpi-uploader.timer
 sudo systemctl enable pigpiod
+sudo systemctl start enpi-uploader.timer
 sudo systemctl start pigpiod
 
 echo "[6/7] Installing udev rules..."
