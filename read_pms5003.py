@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 import pigpio
 
 
-RX_pms5003 = 27 # For software UART
+RX_pms5003 = 21 # For software UART
 exists = False
 
 PAYLOAD_SIZE = 28

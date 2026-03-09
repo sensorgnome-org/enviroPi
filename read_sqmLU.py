@@ -5,7 +5,7 @@ import json
 import time
 
 # Replace with the actual port your SQM is on
-SERIAL_PORT = '/dev/ttyUSB0'
+SERIAL_PORT = '/dev/ttySQM0'
 BAUD_RATE = 115200
 VENDOR_ID = 0x0403
 PRODUCT_ID = 0x6001
@@ -123,8 +123,11 @@ def parse(data):
         return None
 
 def get_port_info(device):
+    # Resolve symlink to real device path
+    real_device = os.path.realpath(device)
+
     ports = serial.tools.list_ports.comports()
     for port in ports:
-        if port.device == device:
+        if port.device == real_device:
             return port.vid, port.pid, port.description
     return None

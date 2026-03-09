@@ -25,10 +25,10 @@ parser.add_argument("-dir", help="Data storage directory (default = /data)", typ
 parser.add_argument("-v", "--verbose", action="store_true", help="Log a lot of messages", default = False)
 parser.add_argument("-i","--interval", help="Sample interval in seconds (default is 300s, or 5 minutes)", type=int, default=300)
 parser.add_argument("--once", action="store_true", help="Only take one sample and exit")
-parser.add_argument("-p", "--port", help="Serial port for the SQM-LU (default is /dev/ttyUSB0)", type=str, default='/dev/ttyUSB0')
+parser.add_argument("-p", "--port", help="Serial port for the SQM-LU (default is /dev/ttySQM0)", type=str, default='/dev/ttySQM0')
 args = parser.parse_args()
 
-# SQM-LU serial port (default is /dev/ttyUSB0, but may need to be changed based on your setup)
+# SQM-LU serial port (default is /dev/SQM0, but may need to be changed based on your setup)
 PORT_sqmLU = args.port
 
 # Seconds between samples
