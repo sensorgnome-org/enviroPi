@@ -33,10 +33,10 @@ import read_bmp280 as bmp280
 import read_bme280 as bme280
 import read_pms5003 as pms5003
 from datetime import date
-from enpi import __version__
-from enpi import __log_dir__
-from enpi import __data_dir__
+from enpi import __version__,__log_dir__,__data_dir__,__sitename_file__
 
+with open(__sitename_file__, 'r') as f:
+    SITE_NAME = f.read().strip()
 
 
 # Parse command-line arguments
@@ -182,7 +182,7 @@ def zip_and_remove(path):
 
 def get_filename(date = date.today()):
     formatted_date = date.strftime('%Y-%m-%d')
-    return f"{args.dir}/air-quality_v{__version__}_{formatted_date}.csv"
+    return f"{args.dir}/air_{SITE_NAME}_v{__version__}_{formatted_date}.csv"
 
 def main():
     init()

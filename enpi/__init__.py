@@ -1,4 +1,4 @@
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 __log_dir__ = "/var/log/enpi"
 __data_dir__ = "/data/enpi"
-__sitename_file__ = "/var/lib/sensorgnome/motus_up.json"
+__sitename_file__ = "/etc/sensorgnome/id"

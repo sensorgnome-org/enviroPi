@@ -14,9 +14,10 @@ import gzip
 import json
 import read_sqmLU as sqmLU
 from datetime import date
-from enpi import __version__
-from enpi import __log_dir__
-from enpi import __data_dir__
+from enpi import __version__,__log_dir__,__data_dir__,__sitename_file__
+
+with open(__sitename_file__, 'r') as f:
+    SITE_NAME = f.read().strip()
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser()
@@ -116,7 +117,7 @@ def zip_and_remove(path):
 
 def get_filename(date = date.today()):
     formatted_date = date.strftime('%Y-%m-%d')
-    return f"{args.dir}/light-level_v{__version__}_{formatted_date}.csv"
+    return f"{args.dir}/light_{SITE_NAME}_v{__version__}_{formatted_date}.csv"
 
 def main():
     init()

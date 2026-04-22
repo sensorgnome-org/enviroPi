@@ -14,6 +14,12 @@ Light level sensor is a USB device made by UniHedron used to detect light pollut
 ## Installation
 With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/main/install.sh | sudo bash`
 
+## Testing
+```
+cd /opt/sensorgnome/enpi
+source env/bin/activate
+```
+
 ---
 
 ## Raspberry Pi Pins being used
@@ -23,7 +29,7 @@ With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sens
 - (3) GPIO 2
 - (5) GPIO 3
 - (7) GPIO 4
-- (11) GPIO 17
+- (18) GPIO 24
 - (13) GPIO 27
 
 

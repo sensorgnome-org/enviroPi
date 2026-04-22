@@ -12,8 +12,7 @@ from enpi import __version__,__log_dir__,__data_dir__,__sitename_file__
 import urllib.request
 
 with open(__sitename_file__, 'r') as f:
-    station_info = json.load(f)
-    SITE_NAME = station_info['station']
+    SITE_NAME = f.read().strip()
 
 
 # Parse command-line arguments
