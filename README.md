@@ -1,4 +1,4 @@
-# SkyPi
+# ENPI
 ## Particulate and light level monitoring with the Raspberry Pi
 
 ## Details

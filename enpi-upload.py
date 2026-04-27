@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--data-dir", help="Data storage directory (default = /data)", type=str, default=__data_dir__)
 parser.add_argument("-v", "--verbose", action="store_true", help="Log a lot of messages", default = False)
 parser.add_argument("-ld", "--log-dir", help="Directory for logging data", type=str, default='/opt/sensorgnome/enpi/')
-parser.add_argument("-s", "--secrets-file", help="Location of secrets file", type=str, default='/opt/sensorgnome/enpi/secrets.env')
+parser.add_argument("-s", "--secrets-file", help="Location of secrets file", type=str, default='/etc/sensorgnome/secrets.env')
 parser.add_argument("-p", "--poll", action="store_true", help="Poll the AWS bucket to see if we can upload")
 args = parser.parse_args()
 
