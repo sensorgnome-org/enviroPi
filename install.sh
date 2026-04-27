@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
+HOME_DIR="/home/gnome"
 ENPI_DIR="/opt/sensorgnome/enpi"
 LOG_DIR="/var/log/enpi"
 DATA_DIR="/data/enpi"
+REPO_NAME="enviroPi"
 SERVICE_USER="gnome"
+SG_REPO_NAME="sensorgnome-control-enpi"
+
 
 echo "=== enviroPi Installer ==="
 
@@ -21,6 +25,11 @@ fi
 
 # Add required groups
 sudo usermod -aG gpio,i2c,dialout "$SERVICE_USER"
+
+cd "$HOME_DIR"
+git clone https://github.com/sensorgnome-org/"$REPO_NAME".git
+cd "$REPO_NAME"
+
 
 # 3. Install code into /opt/enpi
 echo "[3/7] Installing code into $ENPI_DIR..."
@@ -49,7 +58,7 @@ EOF
 
 # 6. Pigpio service
 echo "[6/7] Setting up services..."
-sudo mv "$ENPI_DIR/systemd/*" /etc/systemd/system
+sudo mv "$ENPI_DIR/systemd/" /etc/systemd/system
 
 sudo tee /etc/systemd/system/pigpiod.service > /dev/null <<EOF
 [Unit]
@@ -71,14 +80,33 @@ sudo systemctl enable pigpiod
 sudo systemctl start enpi-uploader.timer
 sudo systemctl start pigpiod
 
+#6. udev rules
 echo "[6/7] Installing udev rules..."
 # Copy rules from repo to system directory
-sudo cp "$ENPI_DIR/udev/99-enpi.rules" /etc/udev/rules.d/
+sudo cp "$ENPI_DIR/udev/10-enpi.rules" /etc/udev/rules.d/
 # Ensure correct permissions
-sudo chmod 644 /etc/udev/rules.d/99-enpi.rules
+sudo chmod 644 /etc/udev/rules.d/10-enpi.rules
 # Reload and trigger
 sudo udevadm control --reload-rules
 sudo udevadm trigger
+
+
+#7. Clone and install sg-control repo
+echo "[7/7] Installing custom sg-control software"
+cd "$HOME_DIR"
+git clone "https://github.com/leberrigan/$SG_REPO_NAME.git"
+cd "$SG_REPO_NAME"
+
+sudo mv "acquisition.json" /etc/sensorgnome/
+sudo mv "src/dashboard.js" /opt/sensorgnome/control/
+sudo mv "src/enpi.js" /opt/sensorgnome/control/
+sudo mv "src/fd-config.json" /opt/sensorgnome/control/
+sudo mv "src/main.js" /opt/sensorgnome/control/
+sudo mv "src/motus_up.js" /opt/sensorgnome/control/
+
+sudo systemctl restart sg-control
+
+
 
 echo "=== Installation complete ==="
 echo "Logs: $LOG_DIR"

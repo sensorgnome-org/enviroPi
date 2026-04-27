@@ -12,18 +12,13 @@ exists = False
 PAYLOAD_SIZE = 28
 HEADER_SIZE = 4
 
-def init( PIN_pms5003 = 17, set_verbose = False):
+def init( set_verbose = False):
     global verbose,pi,exists
     verbose = set_verbose
 
     if verbose:
         print("[PMS5003] Initializing...")
         logging.info("[PMS5003] Initializing...")
-
-    GPIO.setup(PIN_pms5003, GPIO.OUT)
-
-    # Always have 5v on
-    GPIO.output(PIN_pms5003, GPIO.LOW)
 
     time.sleep(0.1)
 
@@ -37,34 +32,10 @@ def init( PIN_pms5003 = 17, set_verbose = False):
     # Connect to UART for PMS5003 (default UART on GPIO14/15 is /dev/serial0)
     #ser = serial.Serial(device, baudrate=9600, timeout=5)
     status = pi.bb_serial_read_open(RX_pms5003, 9600)
-    # Discard data for 300 ms to let PMS5003 align to next frame
-    # start = time.time()
-    # buf = bytearray()
-    
-    # while time.time() - start < 2.0:  # up to 2 seconds
-    #     count, data = pi.bb_serial_read(RX_pms5003)
-    #     if count > 0:
-    #         buf.extend(data)
-
-    #     if b'\x42\x4d' in buf:
-    #         exists = True
-    #         if verbose:
-    #             print("[PMS5003] Found a header")
-    #             logging.error("[PMS5003] Found a header")
-    #         break
-
-    #     time.sleep(0.01)
 
     time.sleep(2.0)
     pi.bb_serial_read(RX_pms5003)  # drain whatever accumulated during warmup
-
-
-
-def on(pin):
-    GPIO.output(pin, GPIO.LOW)
-
-def off(pin):
-    GPIO.output(pin, GPIO.HIGH)
+    return status
 
 def stop():
     pi.bb_serial_read_close(RX_pms5003)

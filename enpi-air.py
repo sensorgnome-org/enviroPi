@@ -51,8 +51,6 @@ args = parser.parse_args()
 # Air temp and pressure sensor
 PIN_bmp280 = 4 # Requires 3v3
 PIN_bme280 = 4 # Requires 3v3
-# Particulate sensor
-PIN_pms5003 = 17 # Requires 5v
 # Seconds after waking from sleep before a measurement should be taken
 wakeLatency = 3 if args.debug else 60
 # Seconds between samples
@@ -93,7 +91,7 @@ def init():
         GPIO.setmode(GPIO.BCM)
         bmp280.init( PIN_bmp280, args.verbose )
         bme280.init( PIN_bme280, args.verbose )
-        pms5003.init( PIN_pms5003, args.verbose )
+        pms5003.init( args.verbose )
 
     except Exception as e:
         print(f"[enpi-air] Something went wrong: {e}")

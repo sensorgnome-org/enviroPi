@@ -2,22 +2,67 @@
 ## Particulate and light level monitoring with the Raspberry Pi
 
 ## Details
-A total of three sensors on two hardware components are used to measure:
+
+#### A total of three sensors on two hardware components are used to measure:
 - Particulates (pm1.0, pm2.5,pm10) - PMS5003
-- Humidity, temperature, air pressure - BME280
+- Humidity, temperature, air pressure - BME280 (or BMP280)
 - Light levels - SQM-LU
 
-Air sensors are all attached to a custom-built "bonnet" for the Raspberry Pi purpose-built for Motus, using the pin headers for connection plus a daughter board for with 
 
-Light level sensor is a USB device made by UniHedron used to detect light pollution.
+#### Air sensors are all attached to a custom-built "bonnet" for the Raspberry Pi purpose-built for Motus
+- Daughter board used for external sensors.
+- No EEPROM means other HATs can be used in conjuction without conflict.
+- UART is bit-banged on GPIO 24 to avoid conflict with GPS HAT and Cell HAT.
+
+
+#### Light level sensor is a USB device made by UniHedron used to detect light pollution.
+- Auto detected using custom udev rules.
+- Device shares same FTDI chip vendor and product IDs as Cornell XCVR so this script overrides that.
+  - Could develop a checking script to accommodate both, but this is unlikely necessary given the Cornell XCVR's rarity.
+
+
+#### Data is uploaded to AWS
+- Secrets file stores keys/bucket name.
+- Stored in folder based on serial number.
+- Daily file rotation.
+
 
 ## Installation
-With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/main/install.sh | sudo bash`
+With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/sensorgnome/install.sh | sudo bash`
+
 
 ## Testing
+
+### Set up python environment
 ```
 cd /opt/sensorgnome/enpi
 source env/bin/activate
+```
+
+### Test PMS5003 and BME280
+```
+/opt/sensorgnome/enpi/env/bin/python3 /opt/sensorgnome/enpi/enpi-air.py -d -v
+```
+
+### Test PMS5003 
+```
+sudo systemctl stop sg-control
+cd /opt/sensorgnome/enpi/
+sudo killall pigpiod
+sudo pigpiod
+env/bin/python3 test-pms5003.py
+
+```
+
+### Test SQM-LU
+```
+cd /opt/sensorgnome/enpi
+env/bin/python3 test-sqmlu.py
+```
+
+### Test Uploader
+```
+sudo env $(grep -v '^\s*#' /opt/sensorgnome/enpi/secrets.env | grep -v '^\s*$' | xargs) /opt/sensorgnome/enpi/env/bin/python3 /opt/sensorgnome/enpi/uploader.py
 ```
 
 ---
@@ -25,24 +70,17 @@ source env/bin/activate
 ## Raspberry Pi Pins being used
 - (1) 3v3
 - (2) 5v
+- (3) GPIO 2 (SDA1, I2C) - BME280
+- (5) GPIO 3 (SCL1, I2C) - BME280
 - (9) Ground
-- (3) GPIO 2
-- (5) GPIO 3
-- (7) GPIO 4
-- (18) GPIO 24
-- (13) GPIO 27
+- (10) GPIO 15 (UART_RXD0) - Not used by default
+- (18) GPIO 24 (UART_RX, bit-banged) - PMS5003
 
 
 ---
 
 ## Next steps
 
-- Test miniUART (ttyS0) with PMS5003
-  - Switch to pins 32/33 or something
-  - Test with GPS hat plugged in
-- Switch BMP/BME280 pin from 4 to 27
-- Test with Cell Hat
-- Add reporting to SG web interface
 
 
 ---
@@ -114,6 +152,6 @@ Uses UART interface which is disabled by default. Steps to make it work:
 ### SQM-LU
 - 
 
+
 ---
 ## TESTING
-sudo env $(grep -v '^\s*#' /opt/sensorgnome/enpi/secrets.env | grep -v '^\s*$' | xargs) /opt/sensorgnome/enpi/env/bin/python3 /opt/sensorgnome/enpi/uploader.py

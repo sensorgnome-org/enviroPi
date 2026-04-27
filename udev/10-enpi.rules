@@ -1,0 +1,4 @@
+# SQM-LU USB-serial device (FTDI)
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="ttySQM0", ENV{ID_MM_CANDIDATE}="0", GOTO="enpi_end"
+
+LABEL="enpi_end"
