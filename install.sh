@@ -32,8 +32,8 @@ echo "[3/8] Installing code into $ENPI_DIR..."
 
 cd "$HOME_DIR"
 git clone https://github.com/sensorgnome-org/"$REPO_NAME".git
-git checkout sensorgnome
 cd "$REPO_NAME"
+git checkout sensorgnome
 
 sudo touch /etc/sensorgnome/secrets.env
 
