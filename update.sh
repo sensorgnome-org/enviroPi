@@ -99,7 +99,7 @@ if [ "$sgcontrol_updated" = true ]; then
     echo "Restarting sg-control service..."
     sudo systemctl restart sg-control
 fi
-if [[ "$enpi_updated" = true ] || [ "$sgcontrol_updated" = true ]]; then
+if [[ "$enpi_updated" = false && "$sgcontrol_updated" = false ]]; then
     echo
     echo "No updates applied. No services restarted."
 fi
