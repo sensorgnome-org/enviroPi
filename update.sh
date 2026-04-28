@@ -12,10 +12,13 @@ SG_CONTROL_DIR="/opt/sensorgnome/control"
 echo "=== enviroPi Update Script ==="
 
 updates_applied=false
+enpi_updated=false
+sgcontrol_updated=false
 
 update_repo() {
     local repo_dir="$1"
     local branch="$2"
+    updates_applied=false
 
     echo
     echo "Checking repo: $repo_dir"
@@ -35,15 +38,14 @@ update_repo() {
     echo "Updates found. Pulling changes..."
     git pull --ff-only origin "$branch"
     updates_applied=true
-    return 1
 }
 
 # 1 Update enviroPi repo
 if [ -d "$HOME_DIR/enviroPi/.git" ]; then
     update_repo "$HOME_DIR/enviroPi" "$REPO_BRANCH"
-    result=$?
 
-    if [ "$result" -eq 1 ]; then
+    if [ "$updates_applied" = true ]; then
+        enpi_updated=true
         echo "Syncing enviroPi files..."
         OLD_REQ_HASH=$(sha256sum "$ENPI_DIR/requirements.txt" 2>/dev/null | awk '{print $1}')
         sudo rsync -av --delete \
@@ -71,12 +73,11 @@ else
 fi
 
 # 2 Update sg-control repo
-updates_applied=false
 if [ -d "$SG_REPO_DIR/.git" ]; then
     update_repo "$SG_REPO_DIR" "enpi"
-    result=$?
 
-    if [ "$result" -eq 1 ]; then
+    if [ "$updates_applied" = true ]; then
+        sgcontrol_updated=true
         echo "Updating sg-control files..."
         sudo cp "$SG_REPO_DIR/src/dashboard.js" "$SG_CONTROL_DIR/"
         sudo cp "$SG_REPO_DIR/src/enpi.js" "$SG_CONTROL_DIR/"
@@ -89,14 +90,16 @@ else
 fi
 
 # 3 Restart pigpio only if updates happened
-if [ "$updates_applied" = true ]; then
+if [ "$enpi_updated" = true ]; then
     echo
     echo "Restarting pigpio..."
     sudo systemctl restart pigpiod
-
+fi
+if [ "$sgcontrol_updated" = true ]; then
     echo "Restarting sg-control service..."
     sudo systemctl restart sg-control
-else
+fi
+if [[ "$enpi_updated" = true ] || [ "$sgcontrol_updated" = true ]]; then
     echo
     echo "No updates applied. No services restarted."
 fi
