@@ -6,7 +6,7 @@ LOG_DIR="/var/log/enpi"
 DATA_DIR="/data/enpi"
 SERVICE_USER="ampi"
 
-echo "=== enviroPi Installer ==="
+echo "=== enpi Installer ==="
 
 # 1. Ensure required packages
 echo "[1/8] Installing system dependencies..."
