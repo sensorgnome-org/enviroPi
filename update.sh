@@ -4,12 +4,13 @@ set -e
 HOME_DIR="/home/gnome"
 ENPI_DIR="/opt/sensorgnome/enpi"
 SERVICE_USER="gnome"
+ENPI_REPO="enpi"
 REPO_BRANCH="sensorgnome"
 
-SG_REPO_DIR="$HOME_DIR/sensorgnome-control-enpi"
+SG_REPO_DIR="$HOME_DIR/sensorgnome-control"
 SG_CONTROL_DIR="/opt/sensorgnome/control"
 
-echo "=== enviroPi Update Script ==="
+echo "=== enpi Update Script ==="
 
 updates_applied=false
 enpi_updated=false
@@ -40,17 +41,17 @@ update_repo() {
     updates_applied=true
 }
 
-# 1 Update enviroPi repo
-if [ -d "$HOME_DIR/enviroPi/.git" ]; then
-    update_repo "$HOME_DIR/enviroPi" "$REPO_BRANCH"
+# 1 Update enpi repo
+if [ -d "$HOME_DIR/$ENPI_REPO/.git" ]; then
+    update_repo "$HOME_DIR/$ENPI_REPO" "$REPO_BRANCH"
 
     if [ "$updates_applied" = true ]; then
         enpi_updated=true
-        echo "Syncing enviroPi files..."
+        echo "Syncing $ENPI_REPO files..."
         OLD_REQ_HASH=$(sha256sum "$ENPI_DIR/requirements.txt" 2>/dev/null | awk '{print $1}')
         sudo rsync -av --delete \
           --exclude-from="$ENPI_DIR/.rsync-exclude" \
-          "$HOME_DIR/enviroPi/" "$ENPI_DIR/"
+          "$HOME_DIR/$ENPI_REPO/" "$ENPI_DIR/"
 
         sudo chown -R "$SERVICE_USER":"$SERVICE_USER" "$ENPI_DIR"
         NEW_REQ_HASH=$(sha256sum "$ENPI_DIR/requirements.txt" 2>/dev/null | awk '{print $1}')
@@ -69,7 +70,7 @@ EOF
         fi
     fi
 else
-    echo "enviroPi repo not found, skipping."
+    echo "enpi repo not found, skipping."
 fi
 
 # 2 Update sg-control repo

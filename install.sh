@@ -5,12 +5,12 @@ HOME_DIR="/home/gnome"
 ENPI_DIR="/opt/sensorgnome/enpi"
 LOG_DIR="/var/log/enpi"
 DATA_DIR="/data/enpi"
-REPO_NAME="enviroPi"
+REPO_NAME="enpi"
 SERVICE_USER="gnome"
-SG_REPO_NAME="sensorgnome-control-enpi"
+SG_REPO_NAME="sensorgnome-control"
 
 
-echo "=== enviroPi Installer ==="
+echo "=== enpi Installer ==="
 
 # 1. Ensure required packages
 echo "[1/8] Installing system dependencies..."

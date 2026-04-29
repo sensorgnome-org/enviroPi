@@ -28,7 +28,7 @@
 
 
 ## Installation
-With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enviroPi/sensorgnome/install.sh | sudo bash`
+With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enpi/sensorgnome/install.sh | sudo bash`
 
 
 ## Testing
