@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import read_sqmlu as sqmlu
 
 try:

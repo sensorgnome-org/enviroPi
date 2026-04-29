@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """
 "ts","light_level","frequency","count","duration","temperature"
 """

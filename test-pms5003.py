@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import read_pms5003 as pms5003
 
 try:

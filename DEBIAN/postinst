@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+# Ensure pigpio daemon is enabled
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl enable pigpiod || true
+  systemctl start pigpiod || true
+fi
+
+# Set up data an log files
+if id gnome >/dev/null 2>&1; then
+  install -d -o gnome -g gnome /data/enpi
+  install -d -o gnome -g gnome /var/log/enpi
+else
+  install -d /data/enpi
+  install -d /var/log/enpi
+fi
+
+
+# Set up udev rules
+RULE_SRC=/opt/sensorgnome/enpi/udev/10-enpi.rules
+RULE_DST=/etc/udev/rules.d/10-enpi.rules
+
+if [ -f "$RULE_SRC" ]; then
+  install -m 644 "$RULE_SRC" "$RULE_DST"
+  udevadm control --reload-rules || true
+  udevadm trigger || true
+fi
+
+
+exit 0
