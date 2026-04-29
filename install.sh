@@ -6,6 +6,7 @@ ENPI_DIR="/opt/sensorgnome/enpi"
 LOG_DIR="/var/log/enpi"
 DATA_DIR="/data/enpi"
 REPO_NAME="enpi"
+BRANCH=${1:-"enpi"}
 SERVICE_USER="gnome"
 SG_REPO_NAME="sensorgnome-control"
 
@@ -18,13 +19,7 @@ sudo rm -f /etc/apt/sources.list.d/*bullseye-backports*.list
 sudo apt update || true
 sudo apt install -y python3-full python3-venv git i2c-tools pigpio
 
-# 2. Create service user if missing
-echo "[2/8] Ensuring user '$SERVICE_USER' exists..."
-if ! id "$SERVICE_USER" >/dev/null 2>&1; then
-    sudo useradd -m -s /bin/bash "$SERVICE_USER"
-fi
-
-# Add required groups
+# 2. Add service user to required groups
 sudo usermod -aG gpio,i2c,dialout "$SERVICE_USER"
 
 # 3. Install code into /opt/enpi
@@ -103,7 +98,7 @@ echo "[8/8] Installing custom sg-control software"
 cd "$HOME_DIR"
 git clone "https://github.com/leberrigan/$SG_REPO_NAME.git"
 cd "$SG_REPO_NAME"
-git switch enpi
+git switch "$BRANCH"
 
 sudo mv "acquisition.json" /etc/sensorgnome/
 sudo mv "src/dashboard.js" /opt/sensorgnome/control/

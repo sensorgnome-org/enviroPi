@@ -34,6 +34,11 @@ With internet connection, run:
 curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enpi/sensorgnome/install.sh | sudo bash
 ```
 
+Or try a different branch with:
+```
+curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enpi/sensorgnome/install.sh | sudo bash -s -- <BRANCH>
+```
+
 ## SensorGnome integration
 
 - Installs sensorgnome-control files from https://github.com/leberrigan/sensorgnome-control/tree/enpi.
