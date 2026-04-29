@@ -1,5 +1,6 @@
 # ENPI
-## Particulate and light level monitoring with the Raspberry Pi
+
+### _Particulate and light level monitoring with the Raspberry Pi_
 
 ## Details
 
@@ -28,7 +29,19 @@
 
 
 ## Installation
-With internet connection, run: `curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enpi/sensorgnome/install.sh | sudo bash`
+With internet connection, run: 
+```
+curl -sSL https://raw.githubusercontent.com/sensorgnome-org/enpi/sensorgnome/install.sh | sudo bash
+```
+
+## SensorGnome integration
+
+- Installs sensorgnome-control files from https://github.com/leberrigan/sensorgnome-control/tree/enpi.
+- Web interface displays sensor info and controls.
+
+![SensorGnome web interface showing plots and controls for enpi](demo.png){width=50%}
+
+
 
 
 ## Testing
